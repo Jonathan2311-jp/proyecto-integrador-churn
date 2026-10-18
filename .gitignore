@@ -1,5 +1,20 @@
-.vscode/
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Cachés de Python
 __pycache__/
 *.pyc
+.pytest_cache/
+
+# Jupyter / editores / SO
 .ipynb_checkpoints/
-proyecto-integrador-churn/
+.vscode/
+.DS_Store
+
+# Resultados generados en ejecución (no se versionan)
+fase-2/outputs/*
+!fase-2/outputs/.gitkeep
+
+# fase-2/models/ SÍ se versiona: son los entregables v1 y v2

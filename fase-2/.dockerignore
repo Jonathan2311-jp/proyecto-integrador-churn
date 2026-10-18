@@ -1,0 +1,19 @@
+# Control de versiones
+.git
+.gitignore
+
+# Entornos y cachés
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Datos y artefactos (entran por montaje al ejecutar)
+data/
+models/
+outputs/
+
+# Pruebas (no van dentro de la imagen)
+tests/
