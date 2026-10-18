@@ -1,0 +1,18 @@
+{
+  "metrica_principal": "f1",
+  "modelo": {
+    "accuracy": 0.7650816181689141,
+    "precision": 0.537521815008726,
+    "recall": 0.8235294117647058,
+    "f1": 0.6504751847940866,
+    "roc_auc": 0.8569944974037046
+  },
+  "modelo_base": {
+    "accuracy": 0.7345635202271115,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "roc_auc": 0.5
+  },
+  "f1_validacion_cruzada": 0.6215667170457849
+}
