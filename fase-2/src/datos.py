@@ -44,6 +44,27 @@ def validar_columnas(df, requiere_target=False):
         raise ValueError(f"Falta la columna objetivo '{TARGET}' en los datos.")
 
 
+def validar_tipos(df):
+    #Valida tipos y nulos de las variables de entrada antes de predecir. Indicando la columna y fila del problema
+
+    problemas = []
+    for c in COLS_NUM:
+        serie = pd.to_numeric(df[c], errors="coerce")
+        vacia = df[c].isna() | (df[c].astype(str).str.strip() == "")
+        no_numerica = serie.isna() & ~vacia
+        if no_numerica.any():
+            filas = (df.index[no_numerica] + 2).tolist()[:5]
+            problemas.append(f"'{c}' debe ser numerica; hay valores no numericos "
+                             f"en las filas {filas} del CSV")
+        elif c != "TotalCharges" and vacia.any():
+            problemas.append(f"'{c}' tiene {int(vacia.sum())} valores nulos y no admite "
+                             "nulos (solo TotalCharges se imputa con 0)")
+    if not pd.to_numeric(df["SeniorCitizen"], errors="coerce").isin([0, 1]).all():
+        problemas.append("'SeniorCitizen' solo admite los valores 0 o 1")
+    if problemas:
+        raise ValueError("Entrada invalida:\n  - " + "\n  - ".join(problemas))
+
+
 def limpiar_determinista(df):
     """Transformaciones que NO aprenden de los datos (no generan fuga).
 
