@@ -8,6 +8,7 @@ Uso:
         --input data/ejemplo_prediccion.csv --output outputs/predicciones.csv
 """
 from __future__ import annotations
+from src.datos import cargar_csv, validar_columnas, validar_tipos, seleccionar_features
 import argparse
 import os
 import sys
@@ -45,6 +46,7 @@ def main():
     df = cargar_csv(args.input)
     # Valida que esten las 19 variables. Una celda nula NO es una columna ausente.
     validar_columnas(df, requiere_target=False)
+    validar_tipos(df)
 
     # Ordena al esquema del entrenamiento e ignora columnas adicionales.
     # Categorias no vistas se ignoran (OneHotEncoder handle_unknown='ignore').
