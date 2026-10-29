@@ -8,14 +8,13 @@ Uso:
         --input data/ejemplo_prediccion.csv --output outputs/predicciones.csv
 """
 from __future__ import annotations
-from src.datos import cargar_csv, validar_columnas, validar_tipos, seleccionar_features
 import argparse
 import os
 import sys
 
 import joblib
 
-from src.datos import cargar_csv, validar_columnas, seleccionar_features
+from src.datos import cargar_csv, validar_columnas, validar_tipos, seleccionar_features
 
 
 def resolver_modelo(ruta):

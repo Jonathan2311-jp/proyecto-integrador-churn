@@ -11,6 +11,7 @@ __pycache__/
 # Jupyter / editores / SO
 .ipynb_checkpoints/
 .vscode/
+.idea/
 .DS_Store
 
 # Resultados generados en ejecución (no se versionan)
@@ -18,3 +19,5 @@ fase-2/outputs/*
 !fase-2/outputs/.gitkeep
 
 # fase-2/models/ SÍ se versiona: son los entregables v1 y v2
+# Excepción: las versiones de prueba locales (v-docker, v-prueba...) no se versionan
+fase-2/models/v-*
