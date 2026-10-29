@@ -42,6 +42,7 @@ original se conserva en la carpeta `fase-1/`.
 ```bash
 python -m venv .venv
 .venv\Scripts\activate        # Windows CMD/PowerShell
+py -m venv .venv, Activate.ps1  #para Windows PowerShell
 pip install -r requirements.txt
 ```
 
@@ -98,7 +99,7 @@ un identificador existente no sobrescribe: el script termina con error.
 
 ## 8. Docker
 
-Terminal usada por el equipo: **CMD de Windows** (las rutas de montaje usan
+Terminal usada por el equipo: **CMD de Windows** y **Windows PowerShell** (las rutas de montaje usan
 `%cd%`; en PowerShell se reemplaza por `${PWD}`, en bash por `$PWD`).
 
 ```bat
@@ -144,12 +145,12 @@ El modelo pasa de no detectar ninguna cancelación (modelo base) a detectar el
 - Solo se define tratamiento de nulos para `TotalCharges` (relleno con 0 por
   su significado); el resto de columnas se asumen completas.
 - Categorías no vistas en predicción se ignoran (`OneHotEncoder` con
-  `handle_unknown='ignore'`); columnas adicionales se descartan.
+  `handle_unknown='ignore'`); columnas adicionales se ignoran al predecir y se conservan en el CSV de salida.
 
 ## 11. Evidencia de ejecución
 
 Salidas reales obtenidas por el equipo en Windows (PowerShell) con Python
-<versión de `python --version`> y las dependencias de `requirements.txt`.
+<versión de `Python 3.13.5`> y las dependencias de `requirements.txt`.
 Todos los comandos se ejecutan desde la carpeta `fase-2`.
 
 ### 11.1 Pruebas
@@ -250,6 +251,79 @@ ERROR: Entrada invalida:
   - 'tenure' debe ser numerica; hay valores no numericos en las filas [2, 4] del CSV
 (código de salida: 1)
 ```
+
+### 11.5 Docker
+
+Construcción de la imagen (se omiten las líneas de descarga y exportación de capas).
+No se entrena durante el *build*:
+
+```text
+> docker build -t modelos-fase2:1.0 .
+[+] Building 90.5s (11/11) FINISHED
+ => [1/6] FROM docker.io/library/python:3.13-slim
+ => [2/6] WORKDIR /app
+ => [3/6] COPY requirements.txt .
+ => [4/6] RUN pip install --no-cache-dir -r requirements.txt
+ => [5/6] COPY src/ ./src/
+ => [6/6] COPY train.py predict.py ./
+ => => naming to docker.io/library/modelos-fase2:1.0
+
+> docker images modelos-fase2
+REPOSITORY      TAG       IMAGE ID       CREATED         SIZE
+modelos-fase2   1.0       a19501cd0a69   2 minutes ago   680MB
+```
+
+Entrenamiento dentro del contenedor (datos montados en solo lectura, modelos
+persistidos en el anfitrión):
+
+```text
+> docker run --rm -v "${PWD}\data:/app/data:ro" -v "${PWD}\models:/app/models" modelos-fase2:1.0 python train.py --data data/telco_churn.csv --target Churn --output-dir models --version v-docker --seed 42
+=== Entrenamiento completado ===
+Version:      v-docker
+Mejor C (CV): 0.1  | F1 CV: 0.6299
+Modelo -> F1: 0.6181 | ROC-AUC: 0.8413 | recall: 0.7834
+Base   -> F1: 0.0000 | ROC-AUC: 0.5000
+Artefactos guardados en:
+  models/v-docker/modelo.joblib
+  models/v-docker/metrics.json
+  models/v-docker/metadata.json
+```
+
+Las métricas coinciden con las de `v1` entrenada en local. Predicción dentro del contenedor:
+
+```text
+> docker run --rm -v "${PWD}\data:/app/data:ro" -v "${PWD}\models:/app/models:ro" -v "${PWD}\outputs:/app/outputs" modelos-fase2:1.0 python predict.py --model models/v-docker/modelo.joblib --input data/ejemplo_prediccion.csv --output outputs/predicciones.csv
+=== Prediccion completada ===
+Modelo:  models/v-docker/modelo.joblib
+Entrada: data/ejemplo_prediccion.csv  (8 filas)
+Salida:  outputs/predicciones.csv
+Marcados como 'Cancela' (1): 6 de 8
+Etiquetas: 1 = el cliente cancelaria (churn), 0 = permaneceria.
+```
+
+Persistencia: con los contenedores ya eliminados (`--rm`), los resultados
+siguen en el anfitrión (se omiten otros archivos locales de `outputs/`):
+
+```text
+> docker ps -a
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+
+> dir models\v-docker
+Mode                 LastWriteTime         Length Name
+-a----      28/10/2026  8:11 p. m.           1797 metadata.json
+-a----      28/10/2026  8:11 p. m.            402 metrics.json
+-a----      28/10/2026  8:11 p. m.          10417 modelo.joblib
+
+> dir outputs\predicciones.csv
+-a----      28/10/2026  8:12 p. m.           1371 predicciones.csv
+
+> Select-String '"python"|"commit"' models\v-docker\metadata.json
+"python": "3.13.18"
+"commit": "desconocido"
+```
+
+El `commit` figura como `desconocido` porque la imagen no incluye `.git`.
+La versión `v-docker` no se versiona en Git (ver `.gitignore`).
 
 ## 12. Fuentes
 
