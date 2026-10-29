@@ -146,12 +146,117 @@ El modelo pasa de no detectar ninguna cancelación (modelo base) a detectar el
 - Categorías no vistas en predicción se ignoran (`OneHotEncoder` con
   `handle_unknown='ignore'`); columnas adicionales se descartan.
 
-## 11. Fuentes
+## 11. Evidencia de ejecución
+
+Salidas reales obtenidas por el equipo en Windows (PowerShell) con Python
+<versión de `python --version`> y las dependencias de `requirements.txt`.
+Todos los comandos se ejecutan desde la carpeta `fase-2`.
+
+### 11.1 Pruebas
+
+```text
+> python -m pytest -v
+collected 12 items
+
+tests/test_aplicacion.py::test_entrenamiento_y_almacenamiento PASSED                                             [  8%]
+tests/test_aplicacion.py::test_carga_y_prediccion PASSED                                                         [ 16%]
+tests/test_aplicacion.py::test_valores_faltantes PASSED                                                          [ 25%]
+tests/test_aplicacion.py::test_entrada_invalida_columna_ausente PASSED                                           [ 33%]
+tests/test_aplicacion.py::test_versionamiento PASSED                                                             [ 41%]
+tests/test_validation.py::test_metricas_modelo_y_base PASSED                                                     [ 50%]
+tests/test_validation.py::test_probabilidades_coinciden_con_el_modelo PASSED                                     [ 58%]
+tests/test_validation.py::test_orden_de_columnas_y_columnas_extra PASSED                                         [ 66%]
+tests/test_validation.py::test_categoria_no_vista_no_falla PASSED                                                [ 75%]
+tests/test_validation.py::test_tipo_invalido_indica_columna_y_fila PASSED                                        [ 83%]
+tests/test_validation.py::test_nulo_en_variable_que_no_admite_nulos PASSED                                       [ 91%]
+tests/test_validation.py::test_modelo_inexistente_termina_con_error PASSED                                       [100%]
+
+============================================ 12 passed in 95.98s (0:01:35) ============================================
+```
+
+### 11.2 Entrenamiento y versionamiento
+
+```text
+> python train.py --data data/telco_churn.csv --target Churn --output-dir outputs/evidencia --version v1 --seed 42
+=== Entrenamiento completado ===
+Version:      v1
+Mejor C (CV): 0.1  | F1 CV: 0.6299
+Modelo -> F1: 0.6181 | ROC-AUC: 0.8413 | recall: 0.7834
+Base   -> F1: 0.0000 | ROC-AUC: 0.5000
+Artefactos guardados en:
+  outputs/evidencia\v1\modelo.joblib
+  outputs/evidencia\v1\metrics.json
+  outputs/evidencia\v1\metadata.json
+```
+
+Reentrenar con la semilla 42 reproduce las métricas de la versión `v1`
+guardada en `models/`. Reutilizar un identificador existente se rechaza sin
+sobrescribir nada:
+
+```text
+> python train.py ... --version v1 --seed 42
+ERROR: La version 'v1' ya existe en outputs/evidencia\v1. Use otro identificador para no sobrescribirla.
+(código de salida: 1)
+```
+
+### 11.3 Predicción con las dos versiones
+
+```text
+> python predict.py --model models/v1 --input data/ejemplo_prediccion.csv --output outputs/pred_v1.csv
+=== Prediccion completada ===
+Modelo:  models/v1\modelo.joblib
+Entrada: data/ejemplo_prediccion.csv  (8 filas)
+Salida:  outputs/pred_v1.csv
+Marcados como 'Cancela' (1): 6 de 8
+Etiquetas: 1 = el cliente cancelaria (churn), 0 = permaneceria.
+
+> python predict.py --model models/v2 --input data/ejemplo_prediccion.csv --output outputs/pred_v2.csv
+=== Prediccion completada ===
+Modelo:  models/v2\modelo.joblib
+Entrada: data/ejemplo_prediccion.csv  (8 filas)
+Salida:  outputs/pred_v2.csv
+Marcados como 'Cancela' (1): 6 de 8
+Etiquetas: 1 = el cliente cancelaria (churn), 0 = permaneceria.
+```
+
+Primeras filas de cada salida (la correspondencia con la entrada se conserva):
+
+```text
+> Import-Csv outputs\pred_v1.csv | Select-Object -First 3 customerID,prediccion,prediccion_etiqueta,probabilidad_churn | Format-Table
+
+customerID prediccion prediccion_etiqueta probabilidad_churn
+---------- ---------- ------------------- ------------------
+7590-VHVEG 1          Cancela             0.786274
+5575-GNVDE 0          No cancela          0.139354
+3668-QPYBK 1          Cancela             0.528653
+
+> Import-Csv outputs\pred_v2.csv | Select-Object -First 3 customerID,prediccion,prediccion_etiqueta,probabilidad_churn | Format-Table
+
+customerID prediccion prediccion_etiqueta probabilidad_churn
+---------- ---------- ------------------- ------------------
+7590-VHVEG 1          Cancela             0.822859
+5575-GNVDE 0          No cancela          0.107921
+3668-QPYBK 1          Cancela             0.535908
+```
+
+### 11.4 Entrada inválida
+
+Con la columna `tenure` conteniendo texto, el proceso termina con un error
+comprensible y no genera archivo de salida:
+
+```text
+> python predict.py --model models/v1 --input outputs/malo.csv --output outputs/p_malo.csv
+ERROR: Entrada invalida:
+  - 'tenure' debe ser numerica; hay valores no numericos en las filas [2, 4] del CSV
+(código de salida: 1)
+```
+
+## 12. Fuentes
 
 - Conjunto de datos *Telco Customer Churn* (IBM):
   https://github.com/IBM/telco-customer-churn-on-icp4d
 
-## 12. Control de versiones (Git)
+## 13. Control de versiones (Git)
 
 Flujo: `main` (estable), `develop` (integración), `feature/*` (tareas). La
 Entrega 2 se integra en `main` y se identifica con la etiqueta `entrega-2`.
