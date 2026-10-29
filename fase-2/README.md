@@ -36,16 +36,48 @@ original se conserva en la carpeta `fase-1/`.
 
 ## 3. Entorno y dependencias
 
-- **Python 3.13.7**
-- Crear el entorno e instalar dependencias (desde la carpeta `fase-2`):
+- **Python 3.13.x** (verificado con 3.13.5 y 3.13.7; la imagen Docker usa
+  `python:3.13-slim`).
+- Todos los comandos se ejecutan desde la carpeta `fase-2`.
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate        # Windows CMD/PowerShell
-py -m venv .venv, Activate.ps1  #para Windows PowerShell
+**Windows PowerShell**
+
+```powershell
+cd fase-2
+py -m venv .venv
+.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
+Si PowerShell indica que la ejecución de scripts está deshabilitada, se
+habilita una sola vez para el usuario actual:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
+**Windows CMD**
+
+```bat
+cd fase-2
+python -m venv .venv
+.venv\Scripts\activate.bat
+pip install -r requirements.txt
+```
+
+**Linux / macOS (bash)**
+
+```bash
+cd fase-2
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Problemas frecuentes:
+- `Could not open requirements file`: el comando se ejecutó fuera de `fase-2`.
+- Un `.venv` con carpeta `bin` en lugar de `Scripts` se creó con un Python que
+  no es el nativo de Windows; se borra y se recrea con `py -m venv .venv`.
 ## 4. Datos
 
 - **Fuente:** conjunto *Telco Customer Churn* (IBM).
@@ -99,9 +131,22 @@ un identificador existente no sobrescribe: el script termina con error.
 
 ## 8. Docker
 
-Terminal usada por el equipo: **CMD de Windows** y **Windows PowerShell** (las rutas de montaje usan
-`%cd%`; en PowerShell se reemplaza por `${PWD}`, en bash por `$PWD`).
+Terminales verificadas: **Windows PowerShell** y **CMD de Windows**. Solo cambia cómo se escribe la ruta del directorio actual:
+`${PWD}` en PowerShell, `%cd%` en CMD y `$PWD` en bash. Requiere Docker Desktop
+en ejecución.
 
+**PowerShell**
+
+```powershell
+docker build -t modelos-fase2:1.0 .
+New-Item -ItemType Directory -Force models, outputs | Out-Null
+
+docker run --rm -v "${PWD}\data:/app/data:ro" -v "${PWD}\models:/app/models" modelos-fase2:1.0 python train.py --data data/telco_churn.csv --target Churn --output-dir models --version v-docker --seed 42
+
+docker run --rm -v "${PWD}\data:/app/data:ro" -v "${PWD}\models:/app/models:ro" -v "${PWD}\outputs:/app/outputs" modelos-fase2:1.0 python predict.py --model models/v-docker/modelo.joblib --input data/ejemplo_prediccion.csv --output outputs/predicciones.csv
+```
+
+**CMD**
 ```bat
 docker build -t modelos-fase2:1.0 .
 
@@ -146,11 +191,13 @@ El modelo pasa de no detectar ninguna cancelación (modelo base) a detectar el
   su significado); el resto de columnas se asumen completas.
 - Categorías no vistas en predicción se ignoran (`OneHotEncoder` con
   `handle_unknown='ignore'`); columnas adicionales se ignoran al predecir y se conservan en el CSV de salida.
+- Dentro del contenedor, el campo `commit` de `metadata.json` queda como
+  `desconocido` porque la imagen no incluye `.git`; `v1` y `v2` (entrenadas en
+  local) sí guardan el hash del código.
 
 ## 11. Evidencia de ejecución
 
-Salidas reales obtenidas por el equipo en Windows (PowerShell) con Python
-<versión de `Python 3.13.5`> y las dependencias de `requirements.txt`.
+Salidas reales obtenidas por el equipo en Windows (PowerShell) con Python 3.13.5 y las dependencias de `requirements.txt`.
 Todos los comandos se ejecutan desde la carpeta `fase-2`.
 
 ### 11.1 Pruebas
