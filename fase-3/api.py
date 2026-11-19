@@ -19,7 +19,7 @@ from pydantic import BaseModel
 
 from src.datos import TARGET
 from src.prediccion import cargar_modelo, predecir_registro
-from src.entrenamiento import entrenar_y_guardar
+from src.entrenamiento import entrenar_y_guardar, validar_version
 
 # Configuracion por variables de entorno (con valores por defecto)
 MODELS_DIR = os.environ.get("MODELS_DIR", "models")
@@ -93,9 +93,14 @@ def train(req: Optional[EntrenarRequest] = None):
     version = req.version or ("v-api-" +
                               datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S"))
     try:
+        validar_version(version)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    try:
         resumen = entrenar_y_guardar(
             data=DATA_PATH, target=TARGET, output_dir=MODELS_DIR,
-            version=version, seed=req.seed or 42)
+            version=version,
+            seed=req.seed if req.seed is not None else 42)
     except FileExistsError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except FileNotFoundError as e:
