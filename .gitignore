@@ -21,3 +21,8 @@ fase-2/outputs/*
 # fase-2/models/ SÍ se versiona: son los entregables v1 y v2
 # Excepción: las versiones de prueba locales (v-docker, v-prueba...) no se versionan
 fase-2/models/v-*
+
+# fase-3: versiones generadas por POST /train (v-api-<fecha>) y resultados locales no se versionan
+fase-3/models/v-*
+fase-3/outputs/*
+!fase-3/outputs/.gitkeep
