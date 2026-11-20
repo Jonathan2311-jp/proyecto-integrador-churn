@@ -12,7 +12,7 @@ Arranque:  uvicorn api:app --host 0.0.0.0 --port 8000
 from __future__ import annotations
 import os
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -34,7 +34,7 @@ class ClienteChurn(BaseModel):
     tenure: int
     MonthlyCharges: float
     TotalCharges: Optional[float] = None   # admite nulo -> se rellena con 0
-    SeniorCitizen: int
+    SeniorCitizen: Literal[0, 1]
     gender: str
     Partner: str
     Dependents: str

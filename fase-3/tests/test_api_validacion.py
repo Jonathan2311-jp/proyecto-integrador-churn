@@ -29,3 +29,9 @@ def test_train_no_sobrescribe_version_existente(cliente, tmp_path):
     r = cliente.post("/train", json={"version": "v1"})
     assert r.status_code == 409
     assert metricas.read_bytes() == antes
+
+def test_senior_citizen_fuera_de_dominio_se_rechaza(cliente, registro_valido):
+    registro_valido["SeniorCitizen"] = 7
+    r = cliente.post("/predict", json=registro_valido)
+    assert r.status_code == 422
+    assert "SeniorCitizen" in str(r.json()["detail"])
