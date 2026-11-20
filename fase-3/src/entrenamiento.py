@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import os
 import platform
+import re
 import subprocess
 from datetime import datetime, timezone
 
@@ -18,6 +19,20 @@ from .datos import (cargar_csv, validar_columnas, separar_X_y,
                     FEATURES, COLS_NUM, COLS_BIN, COLS_CAT, TARGET)
 from .modelo import construir_modelo, calcular_metricas, ALGORITMO
 
+
+PATRON_VERSION = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
+
+def validar_version(version):
+    """Valida el identificador de version (se usa como nombre de carpeta).
+
+    Solo admite letras, numeros, '.', '_' y '-', empezando por letra o numero
+    y con maximo 64 caracteres. Asi un identificador como '../x' no puede
+    escribir fuera de la carpeta de modelos.
+    """
+    if not isinstance(version, str) or not PATRON_VERSION.fullmatch(version):
+        raise ValueError(
+            "Identificador de version invalido: use letras, numeros, '.', '_' "
+            "o '-' (maximo 64 caracteres, empezando por letra o numero).")
 
 def _hash_commit():
     try:
@@ -41,6 +56,7 @@ def entrenar_y_guardar(data, target=TARGET, output_dir="models", version="v1",
     Devuelve un resumen (dict) con la version, las rutas y las metricas.
     Lanza FileExistsError si la version ya existe (no sobrescribe).
     """
+    validar_version(version)
     dir_version = os.path.join(output_dir, version)
     if os.path.isdir(dir_version) and os.listdir(dir_version):
         raise FileExistsError(
