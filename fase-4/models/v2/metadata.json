@@ -1,0 +1,70 @@
+{
+  "version": "v2",
+  "fecha_creacion": "2026-10-18T15:54:23.741860+00:00",
+  "tipo_problema": "clasificacion binaria",
+  "variable_objetivo": "Churn",
+  "algoritmo": "LogisticRegression",
+  "hiperparametros": {
+    "C": 10,
+    "class_weight": "balanced",
+    "max_iter": 1000
+  },
+  "semilla": 7,
+  "variables_entrada": [
+    "tenure",
+    "MonthlyCharges",
+    "TotalCharges",
+    "SeniorCitizen",
+    "gender",
+    "Partner",
+    "Dependents",
+    "PhoneService",
+    "MultipleLines",
+    "InternetService",
+    "OnlineSecurity",
+    "OnlineBackup",
+    "DeviceProtection",
+    "TechSupport",
+    "StreamingTV",
+    "StreamingMovies",
+    "Contract",
+    "PaperlessBilling",
+    "PaymentMethod"
+  ],
+  "tipos_variables": {
+    "tenure": "numerica",
+    "MonthlyCharges": "numerica",
+    "TotalCharges": "numerica",
+    "SeniorCitizen": "binaria (0/1)",
+    "gender": "categorica",
+    "Partner": "categorica",
+    "Dependents": "categorica",
+    "PhoneService": "categorica",
+    "MultipleLines": "categorica",
+    "InternetService": "categorica",
+    "OnlineSecurity": "categorica",
+    "OnlineBackup": "categorica",
+    "DeviceProtection": "categorica",
+    "TechSupport": "categorica",
+    "StreamingTV": "categorica",
+    "StreamingMovies": "categorica",
+    "Contract": "categorica",
+    "PaperlessBilling": "categorica",
+    "PaymentMethod": "categorica"
+  },
+  "datos": {
+    "archivo": "telco_churn.csv",
+    "n_observaciones": 7043
+  },
+  "particion": {
+    "estrategia": "estratificada por el objetivo",
+    "test_size": 0.2,
+    "n_entrenamiento": 5634,
+    "n_prueba": 1409,
+    "validacion_cruzada": "StratifiedKFold(5)"
+  },
+  "metrica_evaluacion": "f1 (clase positiva) y ROC-AUC",
+  "python": "3.13.7",
+  "dependencias": "requirements.txt",
+  "commit": "26965a6e0d847327f19303a890abf38b17c787e8"
+}
