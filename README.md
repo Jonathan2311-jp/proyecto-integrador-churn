@@ -36,9 +36,13 @@ Incluye `Dockerfile` (entrenamiento y predicción en contenedor, con datos y
 resultados montados desde el anfitrión), 12 pruebas con `pytest` y evidencia de
 ejecución en el README.
 
-### Fase 3 — API REST (pendiente)
+### Fase 3 — API REST (completa) · [`fase-3/`](fase-3/README.md)
 
-Servicios `/health`, `/predict` y `/train` sobre el código de la Fase 2.
+API con FastAPI que reutiliza el preprocesamiento y las versiones del modelo:
+`GET /health`, `POST /predict` (valida campos y tipos y devuelve predicción y
+versión) y `POST /train` (guarda una versión nueva sin sobrescribir las
+anteriores). Se ejecuta en Docker con datos y modelos montados desde el
+anfitrión, e incluye un cliente de prueba y 8 pruebas con `pytest`.
 
 ### Fase 4 — Monitoreo básico (pendiente)
 

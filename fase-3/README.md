@@ -119,13 +119,6 @@ Para otra versión: `-e VERSION_ACTIVA=v2`.
 Construcción y arranque:
 
 ```text
-<pega los pasos [1/6] a [6/6] y la línea "naming to">
-<pega la línea "Uvicorn running on http://0.0.0.0:8000">
-```
-
-`/health`, `/predict` y rechazo de un registro sin `tenure`:
-
-```text
 [+] Building 87.8s (11/11) FINISHED      
  => [1/6] FROM docker.io/library/python:3.13-slim@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90                                          0.1s 
  => => resolve docker.io/library/python:3.13-slim@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90                                          0.1s
@@ -135,8 +128,12 @@ Construcción y arranque:
  => [5/6] COPY src/ ./src/                                                                                                                                         0.3s 
  => [6/6] COPY api.py ./  
   => => naming to docker.io/library/modelos-fase3:1.0                                                                                                               0.0s 
- => => unpacking to docker.io/library/modelos-fase3:1.0  
- 
+ => => unpacking to docker.io/library/modelos-fase3:1.0 
+```
+
+`/health`, `/predict` y rechazo de un registro sin `tenure`:
+
+```text
  Respuesta  HTTP 200:
 {
   "prediccion": "Yes",
