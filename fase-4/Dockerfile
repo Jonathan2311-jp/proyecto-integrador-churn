@@ -10,12 +10,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Codigo de la API. Los datos y los modelos NO se copian: entran por montaje.
 COPY src/ ./src/
-COPY api.py ./
+COPY api.py monitoreo.py ./
 
 # Configuracion por defecto (se puede cambiar con -e al ejecutar el contenedor)
 ENV MODELS_DIR=models \
     DATA_PATH=data/telco_churn.csv \
-    VERSION_ACTIVA=v1
+    VERSION_ACTIVA=v1 \
+    LOG_PATH=logs/solicitudes.csv
 
 # Puerto en el que escucha la API
 EXPOSE 8000
