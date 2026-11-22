@@ -18,6 +18,7 @@ def cliente(tmp_path, monkeypatch):
     shutil.copytree(FASE3 / "models" / "v1", tmp_path / "models" / "v1")
     monkeypatch.setattr(api, "MODELS_DIR", str(tmp_path / "models"))
     monkeypatch.setattr(api, "VERSION_ACTIVA", "v1")
+    monkeypatch.setattr(api, "LOG_PATH", str(tmp_path / "logs" / "solicitudes.csv"))
     return TestClient(api.app)
 
 

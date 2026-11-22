@@ -11,6 +11,7 @@ Arranque:  uvicorn api:app --host 0.0.0.0 --port 8000
 """
 from __future__ import annotations
 import os
+import sys
 from datetime import datetime, timezone
 from typing import Literal, Optional
 
@@ -19,6 +20,8 @@ from pydantic import BaseModel
 
 from src.datos import TARGET
 from src.prediccion import cargar_modelo, predecir_registro
+from fastapi import FastAPI, HTTPException, Request
+from src.registro import registrar_solicitud
 from src.entrenamiento import entrenar_y_guardar, validar_version
 
 # Configuracion por variables de entorno (con valores por defecto)
@@ -26,8 +29,27 @@ MODELS_DIR = os.environ.get("MODELS_DIR", "models")
 DATA_PATH = os.environ.get("DATA_PATH", "data/telco_churn.csv")
 VERSION_ACTIVA = os.environ.get("VERSION_ACTIVA", "v1")
 
+LOG_PATH = os.environ.get("LOG_PATH", "logs/solicitudes.csv")
+
 app = FastAPI(title="API de prediccion de churn", version="1.0")
 
+@app.middleware("http")
+async def registrar_predicciones(request: Request, call_next):
+    """Deja una sola fila por cada solicitud a /predict, tambien las rechazadas.
+
+    Se hace aqui (y no dentro de la ruta) porque la validacion de FastAPI puede
+    rechazar la entrada antes de llamar a la funcion de prediccion.
+    """
+    respuesta = await call_next(request)
+    if request.url.path == "/predict":
+        try:
+            registrar_solicitud(
+                LOG_PATH, respuesta.status_code,
+                getattr(request.state, "version", ""),
+                getattr(request.state, "prediccion", ""))
+        except OSError as e:   # un fallo del registro no debe tumbar la prediccion
+            print(f"AVISO: no se pudo escribir el registro: {e}", file=sys.stderr)
+    return respuesta
 
 # ---- Esquema de entrada de /predict (las 19 variables del proyecto) ----
 class ClienteChurn(BaseModel):
@@ -64,7 +86,7 @@ def health():
 
 
 @app.post("/predict")
-def predict(cliente: ClienteChurn):
+def predict(cliente: ClienteChurn, request: Request):
     """Predice un registro con la version configurada."""
     ruta = os.path.join(MODELS_DIR, VERSION_ACTIVA)
     try:
@@ -79,6 +101,9 @@ def predict(cliente: ClienteChurn):
         resultado = predecir_registro(modelo, cliente.model_dump())
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+
+    request.state.version = VERSION_ACTIVA  # para el registro (Fase 4)
+    request.state.prediccion = resultado["prediccion"]
     return {
         "prediccion": resultado["prediccion"],      # "Yes" (cancela) / "No"
         "probabilidad_churn": resultado["probabilidad_churn"],
